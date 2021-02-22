@@ -27,15 +27,21 @@ class TaxaSpider(scrapy.Spider):
         note = ''
         family = response.css('.jtpl-main').css('p ::text').re(r'^Family.*')[0].split(' ')[1].capitalize()
         try: # 亜科ページがフラットな場合
-            response.css('.jtpl-main').css('tr ::text').re(r'.*Subfamily.*')[0].split(' ')[2].capitalize()
+            # response.css('.jtpl-main').css('tr ::text').re(r'.*Subfamily.*')[0].split(' ')[2].capitalize()
             for row in response.xpath('//table/tbody/tr'):
                 pair_counter = 0
+                #tribe = ''
+                #subtribe = ''
                 one_taxa = {'index': '',
-                                'name': '',
-                                'dist': '',
-                                'zukan': '',
-                                'note': ''
-                                }
+                            'name': '',
+                            'dist': '',
+                            'zukan': '',
+                            'note': '',
+                            'family': family,
+                            'subfamily': '',
+                            'tribe': '', 
+                            'subtribe': ''
+                            }
                 for td in row.xpath('td'):
                     texts = td.css('td ::text').extract()
                     texts.pop(0)
@@ -46,24 +52,22 @@ class TaxaSpider(scrapy.Spider):
                             words = i.split(' ')
                             words = [s for s in words if s != '']
                             subfamily = words[words.index('Subfamily') + 1]
-                            print(subfamily)
-                            continue
+                            #one_taxa['subfamily'] = subfamily
+                            #continue
                         elif 'Tribe' in i:
                             words = i.split(' ')
                             words = [s for s in words if s != '']
                             words = [s.rstrip('\n') for s in words]
                             tribe = words[words.index('Tribe') + 1]
-                            print('Tribe')
-                            print(tribe)
-                            continue
+                            #one_taxa['tribe'] = tribe
+                            #continue
                         elif 'Subtribe' in i:
                             words = i.split(' ')
                             words = [s for s in words if s != '']
                             words = [s.rstrip('\n') for s in words]
                             subtribe = words[words.index('Subtribe') + 1]
-                            print('Subtribe')
-                            print(subtribe)
-                            continue
+                            #one_taxa['subtribe'] = subtribe
+                            #continue
                     texts = [s for s in texts if not '\n' in s]
                     print(f"texts: {texts}")
                     print(texts[0].replace('-', '0').isnumeric())
@@ -71,6 +75,9 @@ class TaxaSpider(scrapy.Spider):
                     if texts[0].replace('-', '0').isnumeric():
                         if pair_counter == 0:
                             one_taxa['index'] = texts
+                            one_taxa['subfamily'] = subfamily
+                            one_taxa['tribe'] = tribe
+                            one_taxa['subtribe'] = subtribe
                             pair_counter += 1
                             continue
                     if pair_counter == 1:
