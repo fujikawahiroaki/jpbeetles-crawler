@@ -5,7 +5,14 @@ from jpbeetles.items import JpbeetlesItem
 
 
 def split_name_row(name_row):
-    s = ''.join(name_row).replace('/', '').replace('\u3000', '').replace('\n', '').replace("'", '').replace('(', '').replace(')', '').replace(',', '').strip()
+    s = ''.join(name_row).translate(str.maketrans({'/': '',
+                               '　': '',
+                               '\n': '',
+                               "'": '',
+                               '(': '',
+                               ')': '',
+                               ',': ''
+                               })).strip()
     return s.split()
 
 def get_subgenus(name_list):
@@ -89,14 +96,12 @@ class TaxaSpider(scrapy.Spider):
         family = response.css('.jtpl-main').css('p ::text').re(r'^Family.*')[0].split(' ')[1].capitalize()
         try: # 亜科ページがフラットな場合
             tds = []
-            # response.css('.jtpl-main').css('tr ::text').re(r'.*Subfamily.*')[0].split(' ')[2].capitalize()
             for row in response.xpath('//table/tbody/tr'):
                 for td in row.xpath('td'):
                     texts = td.css('td ::text').extract()
                     texts.pop(0)
                     tds.append(texts)
             tds = [i for i in tds if i != []]
-            pair_list = []
             for texts_index, texts in enumerate(tds):
                 if texts[0] in {'番号', '学名 / 和名', '分布', '*', '備考', '\u3000\u3000'}:
                     continue
