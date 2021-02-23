@@ -4,3 +4,4 @@ __pycache__
 *.py[cod]
 *$py.class
 .scrapy
+jpbeetles/jpbeetles/spiders/taxa.json
