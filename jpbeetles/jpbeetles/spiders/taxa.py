@@ -84,15 +84,6 @@ class TaxaSpider(scrapy.Spider):
         subfamily = ''
         tribe = ''
         subtribe = ''
-        genus = ''
-        subgenus = ''
-        species = ''
-        subspecies = ''
-        scientific_name_author = ''
-        name_publishedin_year = ''
-        japanese_name = ''
-        distribution = ''
-        note = ''
         # 科ページがフラットな場合
         if family is None:
             family = response.css('.jtpl-main').css('p ::text').re(r'^Family.*')[0].split(' ')[1].capitalize()
