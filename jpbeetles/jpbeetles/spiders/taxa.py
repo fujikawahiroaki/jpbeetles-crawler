@@ -76,11 +76,11 @@ class TaxaSpider(scrapy.Spider):
     start_urls = ['https://japanesebeetles.jimdofree.com/目録/']
 
     def parse(self, response):
-        for url in response.css('a::attr("href")').re(r'^/目録/\d.*'):
+        for url in response.css('a::attr("href")').re(r'.*科/$'):
             yield response.follow(url, self.parse_families)
 
     def parse_families(self, response):
-        family = ''
+        family = response.meta.get('family')
         subfamily = ''
         tribe = ''
         subtribe = ''
@@ -93,8 +93,14 @@ class TaxaSpider(scrapy.Spider):
         japanese_name = ''
         distribution = ''
         note = ''
-        family = response.css('.jtpl-main').css('p ::text').re(r'^Family.*')[0].split(' ')[1].capitalize()
-        try: # 亜科ページがフラットな場合
+        # 科ページがフラットな場合
+        if family is None:
+            family = response.css('.jtpl-main').css('p ::text').re(r'^Family.*')[0].split(' ')[1].capitalize()
+        # ニセコブスジコガネ科のみ科表示の形式が違うので直接設定
+        if response.request.url == 'https://japanesebeetles.jimdofree.com/目録/23-ニセコブスジコガネ科/':
+            family = 'Glaresidae'
+        links = [url for url in response.css('a::attr("href")').re(r'.*亜科/$')]
+        if len(links) == 0:
             tds = []
             for row in response.xpath('//table/tbody/tr'):
                 for td in row.xpath('td'):
@@ -114,7 +120,10 @@ class TaxaSpider(scrapy.Spider):
                         words = i.split(' ')
                         words = [s for s in words if s != '']
                         words = [s.rstrip('\n') for s in words]
-                        tribe = words[words.index('Tribe') + 1]
+                        try:
+                            tribe = words[words.index('Tribe') + 1]
+                        except IndexError:
+                            tribe = 'Lagriini' # ハムシダマシのこの族だけ書式が違うため
                     elif 'Subtribe' in i:
                         words = i.split(' ')
                         words = [s for s in words if s != '']
@@ -122,7 +131,21 @@ class TaxaSpider(scrapy.Spider):
                         subtribe = words[words.index('Subtribe') + 1]
                 if texts[0].replace('-', '0').isnumeric():
                     item = JpbeetlesItem()
+                    item['kingdom'] = 'Animalia'
+                    item['phylum'] = 'Arthropoda'
+                    item['class_name'] = 'Insecta'
+                    item['order'] = 'Coleoptera'
                     item['family'] = family
+                    if family == 'Cupedidae' or family == 'Micromalthidae':
+                        item['suborder'] = 'Archostemata'
+                    elif family == 'Torridincolidae':
+                        item['suborder'] = 'Myxophaga'
+                    elif family == 'Gyrinidae' or family == 'Rhysodidae' or \
+                         family == 'Carabidae' or family == 'Haliplidae' or \
+                         family == 'Noteridae' or family == 'Dytiscidae':
+                        item['suborder'] = 'Adephaga'
+                    else:
+                        item['suborder'] = 'Polyphaga'
                     item['subfamily'] = subfamily
                     item['tribe'] = tribe
                     item['subtribe'] = subtribe
@@ -133,7 +156,12 @@ class TaxaSpider(scrapy.Spider):
                     item['scientific_name_author'] = get_scientific_name_author(split_name_row(tds[texts_index + 1]))
                     item['name_publishedin_year'] = get_name_publishedin_year(split_name_row(tds[texts_index + 1]))
                     item['japanese_name'] = get_japanese_name(split_name_row(tds[texts_index + 1]))
+                    distribution = ''.join(tds[texts_index + 2]).replace('\n', '').strip()
+                    item['distribution'] = ''.join(tds[texts_index + 2]).replace('\n', '').strip()
+                    item['note'] = ''.join(tds[texts_index + 4]).strip()
                     yield item
-                
-        except IndexError: # 亜科ページがネストされている場合
-            pass
+        # 科ページがネストされている場合
+        else:
+            for url in links:
+                family = response.css('.jtpl-main').css('p ::text').re(r'^Family.*')[0].split(' ')[1].capitalize()
+                yield response.follow(url, self.parse_families, meta={'family': family})
