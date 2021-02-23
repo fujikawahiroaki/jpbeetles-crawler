@@ -147,7 +147,6 @@ class TaxaSpider(scrapy.Spider):
                     item['scientific_name_author'] = get_scientific_name_author(split_name_row(tds[texts_index + 1]))
                     item['name_publishedin_year'] = get_name_publishedin_year(split_name_row(tds[texts_index + 1]))
                     item['japanese_name'] = get_japanese_name(split_name_row(tds[texts_index + 1]))
-                    distribution = ''.join(tds[texts_index + 2]).replace('\n', '').strip()
                     item['distribution'] = ''.join(tds[texts_index + 2]).replace('\n', '').strip()
                     item['note'] = ''.join(tds[texts_index + 4]).strip()
                     yield item
