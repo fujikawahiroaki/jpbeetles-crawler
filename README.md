@@ -13,5 +13,5 @@ cd jpbeetles/jpbeetles/spiders
 ```
 
 ```
-scrapy crawl taxa -o .csv(または.json)
+scrapy crawl taxa -o <ファイル名>.csv(または.json)
 ```
