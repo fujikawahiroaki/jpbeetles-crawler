@@ -8,8 +8,10 @@ pipenv環境は構築済みとします
 pipenv install
 ```
 
-```cd jpbeetles/jpbeetles/spiders
+```
+cd jpbeetles/jpbeetles/spiders
 ```
 
+```
 scrapy crawl taxa -o .csv(または.json)
 ```
