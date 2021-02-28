@@ -5,3 +5,6 @@ __pycache__
 *$py.class
 .scrapy
 jpbeetles/jpbeetles/spiders/taxa.json
+jpbeetles/jpbeetles/spiders/send_to_webspecimanager.py
+jpbeetles/jpbeetles/spiders/taxa2.json
+jpbeetles/jpbeetles/spiders/error_taxa.json

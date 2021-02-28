@@ -15,17 +15,20 @@ def split_name_row(name_row):
                                })).strip()
     return s.split()
 
+
 def get_subgenus(name_list):
     for name_index, name in enumerate(name_list):
         if name.istitle() and name_index == 1:
             return name
     return ''
 
+
 def get_species(name_list):
     for name in name_list:
         if name.islower():
             return name
     return ''
+
 
 def get_subspecies(name_list):
     sps = []
@@ -36,6 +39,7 @@ def get_subspecies(name_list):
         return sps[1]
     else:
         return ''
+
 
 def get_scientific_name_author(name_list):
     elm = []
@@ -57,11 +61,13 @@ def get_scientific_name_author(name_list):
     else:
         return ' '.join(elm)
 
+
 def get_name_publishedin_year(name_list):
     for name in name_list:
         if name.isnumeric():
             return name
     return 0
+
 
 def get_japanese_name(name_list):
     for name in name_list:
@@ -106,20 +112,41 @@ class TaxaSpider(scrapy.Spider):
                     if 'Subfamily' in i:
                         words = i.split(' ')
                         words = [s for s in words if s != '']
-                        subfamily = words[words.index('Subfamily') + 1]
+                        subfamily = words[words.index('Subfamily') + 1].translate(str.maketrans({'/': '',
+                                                                                                 '　': '',
+                                                                                                 '\n': '',
+                                                                                                 "'": '',
+                                                                                                 '(': '',
+                                                                                                 ')': '',
+                                                                                                 ',': ''
+                                                                                                 })).strip()
                     elif 'Tribe' in i:
                         words = i.split(' ')
                         words = [s for s in words if s != '']
                         words = [s.rstrip('\n') for s in words]
                         try:
-                            tribe = words[words.index('Tribe') + 1]
+                            tribe = words[words.index('Tribe') + 1].translate(str.maketrans({'/': '',
+                                                                                             '　': '',
+                                                                                             '\n': '',
+                                                                                             "'": '',
+                                                                                             '(': '',
+                                                                                             ')': '',
+                                                                                             ',': ''
+                                                                                             })).strip()
                         except IndexError:
                             tribe = 'Lagriini' # ハムシダマシのこの族だけ書式が違うため
                     elif 'Subtribe' in i:
                         words = i.split(' ')
                         words = [s for s in words if s != '']
                         words = [s.rstrip('\n') for s in words]
-                        subtribe = words[words.index('Subtribe') + 1]
+                        subtribe = words[words.index('Subtribe') + 1].translate(str.maketrans({'/': '',
+                                                                                               '　': '',
+                                                                                               '\n': '',
+                                                                                               "'": '',
+                                                                                               '(': '',
+                                                                                               ')': '',
+                                                                                               ',': ''
+                                                                                               })).strip()
                 if texts[0].replace('-', '0').isnumeric():
                     item = JpbeetlesItem()
                     item['kingdom'] = 'Animalia'
@@ -145,10 +172,10 @@ class TaxaSpider(scrapy.Spider):
                     item['species'] = get_species(split_name_row(tds[texts_index + 1]))
                     item['subspecies'] = get_subspecies(split_name_row(tds[texts_index + 1]))
                     item['scientific_name_author'] = get_scientific_name_author(split_name_row(tds[texts_index + 1]))
-                    item['name_publishedin_year'] = get_name_publishedin_year(split_name_row(tds[texts_index + 1]))
+                    item['name_publishedin_year'] = int(get_name_publishedin_year(split_name_row(tds[texts_index + 1])))
                     item['japanese_name'] = get_japanese_name(split_name_row(tds[texts_index + 1]))
                     item['distribution'] = ''.join(tds[texts_index + 2]).replace('\n', '').strip()
-                    item['note'] = ''.join(tds[texts_index + 4]).strip()
+                    item['note'] = ''.join(tds[texts_index + 4]).strip() + f"引用元: {self.start_urls[0]}"
                     yield item
         # 科ページがネストされている場合
         else:
